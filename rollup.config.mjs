@@ -1,10 +1,13 @@
-export default {
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+
+const esm = {
   input: 'dist/esm/index.js',
+  external: ['@capacitor/core'],
   output: [
     {
       file: 'dist/plugin.js',
       format: 'iife',
-      name: 'capacitorZip',
+      name: 'capacitorZipPlugin',
       globals: {
         '@capacitor/core': 'capacitorExports',
       },
@@ -18,5 +21,11 @@ export default {
       inlineDynamicImports: true,
     },
   ],
-  external: ['@capacitor/core'],
+  plugins: [
+    nodeResolve({
+      browser: true,
+    }),
+  ],
 };
+
+export default [esm];
