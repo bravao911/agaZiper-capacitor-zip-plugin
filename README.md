@@ -1,12 +1,78 @@
 # agaziper
 
-Capacitor plugin for zipping and unzipping files
+Capacitor plugin for zipping and unzipping files.
+
+## Framework Support
+This plugin is fully compatible with **Ionic** and **Angular** applications using Capacitor. It provides a seamless native interface for zip operations on both iOS and Android platforms.
 
 ## Install
 
 ```bash
 npm install agaziper
+```
 npx cap sync
+```
+
+## Usage
+
+### Download and Extract a Zip File
+
+Here is an example of how to download a zip file using `fetch` and `@capacitor/filesystem`, then extract it using `agaziper`.
+
+```typescript
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Zip, ArchiveType } from 'agaziper';
+
+const downloadAndExtract = async (url: string) => {
+  try {
+    // 1. Download the file
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    // 2. Convert Blob to Base64
+    const convertBlobToBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+            resolve(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+    });
+
+    const base64Data = await convertBlobToBase64(blob);
+    const fileName = 'archive.zip';
+
+    // 3. Save the file to the device
+    const savedFile = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Cache
+    });
+
+    // 4. Get the absolute path for destination
+    // We'll extract to a subdirectory named 'extracted' in the Cache directory
+    const extractPath = 'extracted';
+    const destDir = await Filesystem.getUri({
+        path: extractPath,
+        directory: Directory.Cache
+    });
+    
+    // 5. Extract the archive
+    const result = await Zip.extract({
+      source: savedFile.uri,
+      destination: destDir.uri,
+      type: ArchiveType.ZIP, // Optional, will auto-detect if omitted
+      overwrite: true
+    });
+
+    console.log('Extraction complete:', result);
+    console.log('Extracted to:', result.path);
+    console.log('Files:', result.files);
+
+  } catch (error) {
+    console.error('Error downloading or extracting:', error);
+  }
+};
 ```
 
 ## API

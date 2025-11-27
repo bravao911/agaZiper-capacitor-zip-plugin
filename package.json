@@ -1,6 +1,6 @@
 {
   "name": "agaziper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Capacitor plugin for zipping and unzipping files",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -27,7 +27,9 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "ionic",
+    "angular"
   ],
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
