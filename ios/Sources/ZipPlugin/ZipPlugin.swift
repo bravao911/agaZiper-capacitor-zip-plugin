@@ -1,11 +1,6 @@
-content:
 import Foundation
 import Capacitor
 
-/**
- * Please read the Capacitor iOS Plugin Development Guide
- * here: https://capacitorjs.com/docs/plugins/ios
- */
 @objc(ZipPlugin)
 public class ZipPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "ZipPlugin"
@@ -18,6 +13,7 @@ public class ZipPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "unzip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isValidZip", returnType: CAPPluginReturnPromise)
     ]
+    
     private let implementation = Zip()
 
     @objc func compress(_ call: CAPPluginCall) {
@@ -30,9 +26,8 @@ public class ZipPlugin: CAPPlugin, CAPBridgedPlugin {
         let type = call.getString("type") ?? "zip"
         let password = call.getString("password")
         
-        // Currently only ZIP is supported on iOS via SSZipArchive
         if type != "zip" {
-            call.reject("Archive type '\(type)' is not currently supported on iOS")
+            call.reject("Only ZIP compression supported")
             return
         }
 
@@ -54,11 +49,12 @@ public class ZipPlugin: CAPPlugin, CAPBridgedPlugin {
         let password = call.getString("password")
         let overwrite = call.getBool("overwrite") ?? true
         
-        // Auto-detect type or default to zip (Only ZIP supported currently)
         let type = call.getString("type") ?? "zip"
-        if type != "zip" {
-             call.reject("Archive type '\(type)' is not currently supported on iOS")
-             return
+
+        // Allow TAR formats
+        if ["zip", "tar", "tgz", "tar.gz", "tbz", "tar.bz2", "txz", "tar.xz", "zst", "tar.zst"].contains(type) == false {
+            call.reject("Archive type '\(type)' not supported")
+            return
         }
 
         do {
@@ -74,29 +70,20 @@ public class ZipPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Must provide source")
             return
         }
-        // Using "zip" as default as it's the only one implemented
+
         let type = call.getString("type") ?? "zip"
-        
+
+        // ZIP validation only
         if type != "zip" {
-             call.resolve(["valid": false])
-             return
+            call.resolve(["valid": false])
+            return
         }
-        
+
         let isValid = implementation.isValidZip(source: source)
         call.resolve(["valid": isValid])
     }
 
-    // MARK: - Legacy Methods
-    
-    @objc func zip(_ call: CAPPluginCall) {
-        self.compress(call)
-    }
-    
-    @objc func unzip(_ call: CAPPluginCall) {
-        self.extract(call)
-    }
-    
-    @objc func isValidZip(_ call: CAPPluginCall) {
-        self.isValidArchive(call)
-    }
+    @objc func zip(_ call: CAPPluginCall) { self.compress(call) }
+    @objc func unzip(_ call: CAPPluginCall) { self.extract(call) }
+    @objc func isValidZip(_ call: CAPPluginCall) { self.isValidArchive(call) }
 }
